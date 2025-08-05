@@ -15,7 +15,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // ✅ Tambahkan jadwal pengumuman bulanan otomatis
+       $schedule->command('pengumuman:generate-bulanan')->everyMinute();
+
+       
     }
 
     /**

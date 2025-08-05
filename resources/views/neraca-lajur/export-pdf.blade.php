@@ -12,27 +12,31 @@
 </head>
 <body>
     <h3>Neraca Lajur - {{ $tanggal ?? 'Semua Tanggal' }}</h3>
+
     <table>
         <thead>
-            <tr>
-                <th>Nama Akun</th>
-                <th>Saldo Awal</th>
-                <th>Debet</th>
-                <th>Kredit</th>
-                <th>Saldo Akhir</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($data as $row)
-                <tr>
-                    <td>{{ $row['nama'] }}</td>
-                    <td>{{ number_format($row['awal'], 0, ',', '.') }}</td>
-                    <td>{{ number_format($row['debit'], 0, ',', '.') }}</td>
-                    <td>{{ number_format($row['kredit'], 0, ',', '.') }}</td>
-                    <td>{{ number_format($row['akhir'], 0, ',', '.') }}</td>
-                </tr>
-            @endforeach
-        </tbody>
+    <tr>
+        <th>Nama Akun</th>
+        <th>Saldo Awal</th>
+        <th>Debet</th>
+        <th>Kredit</th>
+        <th>Saldo Akhir</th>
+        <th>Status</th> {{-- Tambahan kolom --}}
+    </tr>
+</thead>
+<tbody>
+    @foreach ($data as $row)
+        <tr>
+            <td>{{ $row['nama'] }}</td>
+            <td>{{ number_format($row['awal'], 0, ',', '.') }}</td>
+            <td>{{ number_format($row['debit'], 0, ',', '.') }}</td>
+            <td>{{ number_format($row['kredit'], 0, ',', '.') }}</td>
+            <td>{{ number_format($row['akhir'], 0, ',', '.') }}</td>
+            <td>{{ $row['status'] }}</td> {{-- Tambahan kolom --}}
+        </tr>
+    @endforeach
+</tbody>
+
     </table>
 </body>
 </html>

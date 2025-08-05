@@ -23,12 +23,21 @@
             <div class="col-md-2">
                 <a href="{{ route('neraca-lajur.index') }}" class="btn btn-outline-danger w-100">Reset Filter</a>
             </div>
-            <div class="col-md-1">
-                <button class="btn btn-outline-secondary w-100" type="button">PDF</button>
-            </div>
-            <div class="col-md-1">
-                <button class="btn btn-outline-success w-100" type="button">Excel</button>
-            </div>
+           <div class="col-md-1">
+    <a href="{{ route('neraca-lajur.export', ['format' => 'pdf', 'tanggal' => request('tanggal'), 'nama_akun' => request('nama_akun')]) }}" 
+       class="btn btn-danger w-100">
+        PDF
+    </a>
+</div>
+
+<div class="col-md-1">
+    <a href="{{ route('neraca-lajur.export', ['format' => 'csv', 'tanggal' => request('tanggal'), 'nama_akun' => request('nama_akun')]) }}" 
+       class="btn btn-success w-100">
+        Excel
+    </a>
+</div>
+
+
         </div>
     </form>
 

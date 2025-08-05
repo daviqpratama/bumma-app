@@ -7,6 +7,9 @@ use App\Models\JurnalUmum;
 use App\Models\SaldoAwal;
 use App\Models\Akun;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
+// use App\Exports\JurnalPenyesuaianExport;
+// use Maatwebsite\Excel\Facades\Excel;
 
 class JurnalPenyesuaianController extends Controller
 {
@@ -16,7 +19,6 @@ class JurnalPenyesuaianController extends Controller
         $tahun = $request->tahun ?? now()->format('Y');
         $nomorJurnal = $request->nomor_jurnal;
 
-        // Ambil semua jurnal penyesuaian dari database
         $jurnals = JurnalUmum::with('akun')
             ->where('ref', 'Penyesuaian')
             ->when($bulan, fn($q) => $q->whereMonth('tanggal', $bulan))
@@ -40,12 +42,53 @@ class JurnalPenyesuaianController extends Controller
 
     public function exportPdf()
     {
-        // Akan diisi nanti
+        $jurnals = JurnalUmum::with('akun')
+            ->where('ref', 'Penyesuaian')
+            ->orderBy('tanggal')
+            ->orderBy('kode_jurnal')
+            ->get();
+
+        $totalDebit = $jurnals->where('posisi', 'debit')->sum('nominal');
+        $totalKredit = $jurnals->where('posisi', 'kredit')->sum('nominal');
+
+        $pdf = Pdf::loadView('jurnal-penyesuaian.pdf', compact('jurnals', 'totalDebit', 'totalKredit'));
+        return $pdf->download('jurnal-penyesuaian.pdf');
     }
 
     public function exportExcel()
     {
-        // Akan diisi nanti
+        $jurnals = JurnalUmum::with('akun')
+            ->where('ref', 'Penyesuaian')
+            ->orderBy('tanggal')
+            ->orderBy('kode_jurnal')
+            ->get();
+
+        $filename = "jurnal-penyesuaian-" . now()->format('Ymd_His') . ".csv";
+
+        $headers = [
+            "Content-Type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($jurnals) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Tanggal', 'Kode Jurnal', 'Akun', 'Keterangan', 'Posisi', 'Nominal']);
+
+            foreach ($jurnals as $jurnal) {
+                fputcsv($handle, [
+                    \Carbon\Carbon::parse($jurnal->tanggal)->format('d-m-Y'),
+                    $jurnal->kode_jurnal,
+                    $jurnal->akun->nama ?? '-',
+                    $jurnal->keterangan,
+                    ucfirst($jurnal->posisi),
+                    $jurnal->nominal,
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function generate()
@@ -53,7 +96,6 @@ class JurnalPenyesuaianController extends Controller
         $tanggal = now()->toDateString();
         $kodeJurnal = 'JP-' . now()->format('my') . '-' . strtoupper(Str::random(3));
 
-        // Daftar akun penyesuaian otomatis (id aset => id beban, persentase penyesuaian)
         $penyesuaian = [
             ['aset' => 'Perlengkapan', 'beban' => 'Beban Perlengkapan', 'persen' => 0.2],
             ['aset' => 'Sewa Dibayar di Muka', 'beban' => 'Beban Sewa', 'persen' => 0.25],
@@ -66,13 +108,11 @@ class JurnalPenyesuaianController extends Controller
             $akunBeban = Akun::where('nama', $item['beban'])->first();
 
             if ($akunAset && $akunBeban) {
-                // Ambil saldo awal akun aset ini (pakai total debit - kredit)
                 $saldo = SaldoAwal::where('akuns_id', $akunAset->id)->get();
                 $total = $saldo->sum('debit') - $saldo->sum('kredit');
                 $nilaiPenyesuaian = $total * $item['persen'];
 
                 if ($nilaiPenyesuaian > 0) {
-                    // Simpan Jurnal: Debit Beban
                     JurnalUmum::create([
                         'tanggal' => $tanggal,
                         'kode_jurnal' => $kodeJurnal,
@@ -83,7 +123,6 @@ class JurnalPenyesuaianController extends Controller
                         'ref' => 'Penyesuaian',
                     ]);
 
-                    // Simpan Jurnal: Kredit Aset
                     JurnalUmum::create([
                         'tanggal' => $tanggal,
                         'kode_jurnal' => $kodeJurnal,
@@ -99,5 +138,4 @@ class JurnalPenyesuaianController extends Controller
 
         return redirect()->route('jurnal-penyesuaian.index')->with('success', 'Jurnal penyesuaian berhasil dibuat otomatis.');
     }
-
 }

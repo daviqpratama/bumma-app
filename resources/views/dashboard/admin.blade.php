@@ -58,19 +58,29 @@
     <!-- Informasi Tambahan -->
     <div class="row mt-4">
         <div class="col-md-6">
-            <h5>Pengumuman Komunitas</h5>
-            <ul>
-                <li>📌 Rapat Bulanan - 22 April 2024</li>
-                <li>📌 Musyawarah Masyarakat Adat - 19 April 2024</li>
-            </ul>
-        </div>
+    <h5>Pengumuman Komunitas</h5>
+    <ul>
+        @forelse($pengumuman as $item)
+            <li>📌 {{ $item->judul }} - {{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d F Y') }}</li>
+        @empty
+            <li>Tidak ada pengumuman komunitas.</li>
+        @endforelse
+    </ul>
+</div>
+
         <div class="col-md-6">
-            <h5>Notifikasi Transaksi</h5>
-            <ul>
-                <li>✅ Transfer Masuk - 21 April 2024 10:30</li>
-                <li>❌ Transfer Keluar - 15 April 2024 10:00</li>
-            </ul>
-        </div>
+    <h5>Notifikasi Transaksi Terbaru</h5>
+    <ul>
+        @foreach($notifikasiTransaksi as $notif)
+            @if($notif->nominal_kredit > 0)
+                <li>✅ Transfer Masuk - {{ date('d M Y H:i', strtotime($notif->tanggal)) }}</li>
+            @else
+                <li>❌ Transfer Keluar - {{ date('d M Y H:i', strtotime($notif->tanggal)) }}</li>
+            @endif
+        @endforeach
+    </ul>
+</div>
+
     </div>
 </div>
 @endsection
@@ -78,38 +88,61 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const lineCtx = document.getElementById('lineChart');
+    // Line Chart Pendapatan vs Biaya
+    const lineCtx = document.getElementById('lineChart').getContext('2d');
     new Chart(lineCtx, {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-            datasets: [
-                {
-                    label: 'Pendapatan',
-                    data: [10, 20, 40, 50, 65, 80],
-                    borderColor: 'green',
-                    fill: false,
-                },
-                {
-                    label: 'Biaya',
-                    data: [5, 10, 20, 30, 45, 55],
-                    borderColor: 'orange',
-                    fill: false,
-                }
-            ]
+           labels: {!! json_encode($bulanLabels) !!},
+           datasets: [
+              {
+                label: 'Pendapatan',
+                data: {!! json_encode(array_values($pendapatanBulanan->toArray())) !!},
+                borderColor: 'green',
+                backgroundColor: 'rgba(0, 128, 0, 0.3)',
+                fill: true
+              },
+              {
+                label: 'Biaya',
+                data: {!! json_encode(array_values($biayaBulanan->toArray())) !!},
+                borderColor: 'orange',
+                backgroundColor: 'rgba(255, 165, 0, 0.3)',
+                fill: true
+              }
+           ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' }
+            }
         }
     });
 
-    const pieCtx = document.getElementById('pieChart');
+    // Pie Chart Distribusi Pengeluaran
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
     new Chart(pieCtx, {
         type: 'pie',
         data: {
-            labels: ['Operasional', 'Sosial', 'Cadangan'],
+            labels: {!! json_encode(array_keys($distribusiPengeluaran->toArray())) !!},
             datasets: [{
-                data: [60, 25, 15],
-                backgroundColor: ['#264653', '#2a9d8f', '#e9c46a']
+                data: {!! json_encode(array_values($distribusiPengeluaran->toArray())) !!},
+                backgroundColor: [
+                    '#264653', '#2a9d8f', '#e9c46a',
+                    '#f4a261', '#e76f51', '#a9def9',
+                    '#fde2e4', '#d8e2dc'
+                ]
             }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
         }
     });
 </script>
 @endpush
+
+
+ 
