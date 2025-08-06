@@ -16,6 +16,6 @@ export default defineConfig({
         outDir: 'public/build',
     },
     base: process.env.APP_ENV === 'production'
-        ? '/build/' // penting untuk production
+        ? '/build/' 
         : '/',
 });
