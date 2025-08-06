@@ -7,7 +7,7 @@ use Illuminate\View\View;
 
 class AppLayout extends Component
 {
-    /**
+    /**p
      * Get the view / contents that represents the component.
      */
     public function render(): View
