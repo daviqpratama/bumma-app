@@ -15,6 +15,7 @@ use App\Http\Controllers\LaporanKinerjaController;
 use App\Http\Controllers\RiwayatTransaksiController;
 use App\Http\Controllers\DistribusiSosialController;
 
+// Redirect to dashboard
 Route::get('/', fn () => redirect()->route('dashboard'));
 
 require __DIR__.'/auth.php';
