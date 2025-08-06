@@ -11,4 +11,11 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    build: {
+        manifest: true,
+        outDir: 'public/build',
+    },
+    base: process.env.APP_ENV === 'production'
+        ? '/build/' // penting untuk production
+        : '/',
 });
